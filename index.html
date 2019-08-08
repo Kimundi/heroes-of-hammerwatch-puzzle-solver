@@ -134,8 +134,8 @@
                         var step = i
                         var puzzle_step = trace[i][0]
                         var puzzle_point = null;
-                        if (i < trace.length) {
-                            puzzle_point = trace[i][1]
+                        if (i + 1 < trace.length) {
+                            puzzle_point = trace[i + 1][1]
                         }
                         draw(puzzle_step, 0, 160 * i, puzzle_point);
                     }
