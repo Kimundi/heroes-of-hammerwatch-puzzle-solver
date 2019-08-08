@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Canvas tutorial</title>
+    <script type="text/javascript">
+        puzzle = [
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0,
+        ]
+
+        function draw() {
+            var canvas = document.getElementById('tutorial');
+            if (canvas.getContext) {
+                var ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                on = 'rgb(127, 127, 255)'
+                off = 'rgba(0, 0, 127)'
+
+                for (x = 0; x < 3; x++) {
+                    for (y = 0; y < 3; y++) {
+                        if (puzzle[x + y * 3] == 0) {
+                            ctx.fillStyle = off;
+                        } else {
+                            ctx.fillStyle = on;
+                        }
+
+                        ctx.fillRect(50 * x, 50 * y, 50, 50);
+                    }
+                }
+            }
+        }
+        function loadme() {
+            draw();
+
+            var canvas = document.getElementById('tutorial');
+
+            var elemLeft = canvas.offsetLeft,
+                elemTop = canvas.offsetTop;
+
+            // Add event listener for `click` events.
+            canvas.addEventListener('click', function (event) {
+                var x = event.pageX - elemLeft,
+                    y = event.pageY - elemTop;
+
+
+                x = Math.floor(x / 50)
+                y = Math.floor(y / 50)
+
+                //alert("" + x + " " + y)
+
+                x = Math.min(2, x)
+                x = Math.max(0, x)
+                y = Math.min(2, y)
+                y = Math.max(0, y)
+
+                puzzle[x + y * 3] = 1 - puzzle[x + y * 3]
+
+                draw();
+
+            }, false);
+        }
+    </script>
+    <style type="text/css">
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body onload="loadme();">
+    <canvas id="tutorial" width="150" height="1500"></canvas>
+</body>
+
+</html>
