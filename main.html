@@ -9,31 +9,145 @@
             0, 0, 0,
             0, 0, 0,
             0, 0, 0,
-        ]
+        ];
 
-        function draw() {
+        function draw(puzzle, gx, gy) {
             var canvas = document.getElementById('tutorial');
             if (canvas.getContext) {
                 var ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                on = 'rgb(127, 127, 255)'
-                off = 'rgba(0, 0, 127)'
 
-                for (x = 0; x < 3; x++) {
-                    for (y = 0; y < 3; y++) {
+                var on = 'rgb(127, 127, 255)'
+                var off = 'rgba(0, 0, 127)'
+
+                for (var x = 0; x < 3; x++) {
+                    for (var y = 0; y < 3; y++) {
                         if (puzzle[x + y * 3] == 0) {
                             ctx.fillStyle = off;
                         } else {
                             ctx.fillStyle = on;
                         }
 
-                        ctx.fillRect(50 * x, 50 * y, 50, 50);
+                        ctx.fillRect(gx + 50 * x, gy + 50 * y, 50, 50);
                     }
                 }
             }
         }
+
+        function get(puzzle, x, y) {
+            return puzzle[x + y * 3];
+        }
+
+        function toggle(puzzle, x, y) {
+            var r = puzzle.slice();
+            r[x + y * 3] = 1 - r[x + y * 3];
+            return r
+        }
+
+        function walk_on(puzzle, x, y) {
+            var puzzle = toggle(puzzle, x, y);
+            if (x > 0) {
+                puzzle = toggle(puzzle, x - 1, y);
+            }
+            if (y > 0) {
+                puzzle = toggle(puzzle, x, y - 1);
+            }
+            if (x < 2) {
+                puzzle = toggle(puzzle, x + 1, y);
+            }
+            if (y < 2) {
+                puzzle = toggle(puzzle, x, y + 1);
+            }
+            return puzzle;
+        }
+
+        function count_around(puzzle, x, y) {
+            var a = 0;
+
+            a += get(puzzle, x, y);
+            if (x > 0) {
+                a += get(puzzle, x - 1, y);
+            }
+            if (y > 0) {
+                a += get(puzzle, x, y - 1);
+            }
+            if (x < 2) {
+                a += get(puzzle, x + 1, y);
+            }
+            if (y < 2) {
+                a += get(puzzle, x, y + 1);
+            }
+
+            return a;
+        }
+
+        function array_equal(arr1, arr2) {
+            if (arr1.length !== arr2.length) return false;
+
+            for (var i = 0; i < arr1.length; i++) {
+                if (arr1[i] !== arr2[i]) return false;
+            }
+            return true;
+        }
+
+        function is_solved(puzzle) {
+            var solved = [
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1
+            ];
+            return array_equal(puzzle, solved);
+        }
+
+
+
+        function solve_all(puzzle) {
+            var q = [[puzzle, [puzzle]]]
+            var cache = new Set()
+
+            while (q.length > 0) {
+                var puzzle_trace = q[0]
+                q = q.slice(1)
+                var puzzle = puzzle_trace[0]
+                var trace = puzzle_trace[1]
+
+                if (cache.has(puzzle.join())) {
+                    continue;
+                }
+                cache.add(puzzle.join())
+
+                if (is_solved(puzzle)) {
+                    for (var i = 1; i < trace.length; i++) {
+                        var step = i
+                        var puzzle_step = trace[i]
+                        draw(puzzle_step, 0, 160 * i);
+                    }
+                    break
+                }
+
+                var next_tries = []
+                for (var x = 0; x < 3; x++) {
+                    for (var y = 0; y < 3; y++) {
+                        next_tries.push([x, y]);
+                    }
+                }
+
+                next_tries.sort(function (a, b) {
+                    var av = count_around(puzzle, a[0], a[1]);
+                    var bv = count_around(puzzle, b[0], b[1]);
+                    return av - bv;
+                });
+
+                for (var i = 0; i < next_tries.length; i++) {
+                    var z = walk_on(puzzle, next_tries[i][0], next_tries[i][1]);
+                    var new_trace = trace.slice()
+                    new_trace.push(z)
+                    q.push([z, new_trace])
+                }
+            }
+        }
+
         function loadme() {
-            draw();
+            draw(puzzle, 0, 0);
 
             var canvas = document.getElementById('tutorial');
 
@@ -58,7 +172,13 @@
 
                 puzzle[x + y * 3] = 1 - puzzle[x + y * 3]
 
-                draw();
+                if (canvas.getContext) {
+                    var ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                draw(puzzle, 0, 0);
+
+                solve_all(puzzle.slice());
 
             }, false);
         }
