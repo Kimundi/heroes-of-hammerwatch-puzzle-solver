@@ -11,13 +11,19 @@
             0, 0, 0,
         ];
 
-        function draw(puzzle, gx, gy) {
+        function resize_canvas(puzzle_count) {
+            var canvas = document.getElementById('tutorial');
+            canvas.height = 160 * puzzle_count - 10;
+        }
+
+        function draw(puzzle, gx, gy, point) {
             var canvas = document.getElementById('tutorial');
             if (canvas.getContext) {
                 var ctx = canvas.getContext('2d');
 
                 var on = 'rgb(127, 127, 255)'
                 var off = 'rgba(0, 0, 127)'
+                var point_color = 'rgb(200, 200, 255)'
 
                 for (var x = 0; x < 3; x++) {
                     for (var y = 0; y < 3; y++) {
@@ -29,6 +35,13 @@
 
                         ctx.fillRect(gx + 50 * x, gy + 50 * y, 50, 50);
                     }
+                }
+                if (point) {
+                    var px = point[0]
+                    var py = point[1]
+
+                    ctx.fillStyle = point_color;
+                    ctx.fillRect(gx + 50 * px + 10, gy + 50 * py + 10, 30, 30);
                 }
             }
         }
@@ -101,7 +114,7 @@
 
 
         function solve_all(puzzle) {
-            var q = [[puzzle, [puzzle]]]
+            var q = [[puzzle, [[puzzle, null]]]]
             var cache = new Set()
 
             while (q.length > 0) {
@@ -116,10 +129,15 @@
                 cache.add(puzzle.join())
 
                 if (is_solved(puzzle)) {
-                    for (var i = 1; i < trace.length; i++) {
+                    resize_canvas(trace.length);
+                    for (var i = 0; i < trace.length; i++) {
                         var step = i
-                        var puzzle_step = trace[i]
-                        draw(puzzle_step, 0, 160 * i);
+                        var puzzle_step = trace[i][0]
+                        var puzzle_point = null;
+                        if (i < trace.length) {
+                            puzzle_point = trace[i][1]
+                        }
+                        draw(puzzle_step, 0, 160 * i, puzzle_point);
                     }
                     break
                 }
@@ -138,9 +156,11 @@
                 });
 
                 for (var i = 0; i < next_tries.length; i++) {
-                    var z = walk_on(puzzle, next_tries[i][0], next_tries[i][1]);
+                    var x = next_tries[i][0]
+                    var y = next_tries[i][1]
+                    var z = walk_on(puzzle, x, y);
                     var new_trace = trace.slice()
-                    new_trace.push(z)
+                    new_trace.push([z, [x, y]])
                     q.push([z, new_trace])
                 }
             }
@@ -165,22 +185,21 @@
 
                 //alert("" + x + " " + y)
 
-                x = Math.min(2, x)
-                x = Math.max(0, x)
-                y = Math.min(2, y)
-                y = Math.max(0, y)
+                if (x >= 0 && x <= 2 && y >= 0 && y <= 2) {
+                    puzzle[x + y * 3] = 1 - puzzle[x + y * 3]
 
-                puzzle[x + y * 3] = 1 - puzzle[x + y * 3]
+                    if (canvas.getContext) {
+                        var ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                    draw(puzzle, 0, 0);
 
-                if (canvas.getContext) {
-                    var ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    solve_all(puzzle.slice());
                 }
-                draw(puzzle, 0, 0);
-
-                solve_all(puzzle.slice());
 
             }, false);
+
+            solve_all(puzzle.slice());
         }
     </script>
     <style type="text/css">
