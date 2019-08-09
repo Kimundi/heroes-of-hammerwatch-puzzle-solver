@@ -123,11 +123,6 @@
                 var puzzle = puzzle_trace[0]
                 var trace = puzzle_trace[1]
 
-                if (cache.has(puzzle.join())) {
-                    continue;
-                }
-                cache.add(puzzle.join())
-
                 if (is_solved(puzzle)) {
                     resize_canvas(trace.length);
                     for (var i = 0; i < trace.length; i++) {
@@ -169,7 +164,11 @@
                     var z = walk_on(puzzle, x, y);
                     var new_trace = trace.slice()
                     new_trace.push([z, [x, y]])
-                    q.push([z, new_trace])
+
+                    if (!cache.has(z.join())) {
+                        q.push([z, new_trace])
+                        cache.add(z.join());
+                    }
                 }
             }
         }
