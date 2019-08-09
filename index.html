@@ -152,7 +152,15 @@
                 next_tries.sort(function (a, b) {
                     var av = count_around(puzzle, a[0], a[1]);
                     var bv = count_around(puzzle, b[0], b[1]);
-                    return av - bv;
+                    var order = av - bv;
+                    if (order == 0) {
+                        order = a[1] - b[1]
+                    }
+                    if (order == 0) {
+                        order = a[0] - b[0]
+                    }
+
+                    return order;
                 });
 
                 for (var i = 0; i < next_tries.length; i++) {
